@@ -1,0 +1,172 @@
+{
+  "evidence_id": "E6",
+  "kind": "metrics",
+  "query": {
+    "template_id": "metrics.by_service_metric",
+    "backend": "fixture",
+    "kind": "metrics",
+    "method": "GET",
+    "path": "/metrics",
+    "params": {
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      }
+    },
+    "statement": "service=payments metric=request_latency_p99"
+  },
+  "response_hash": "sha256:c9a9382e1e84a6bcd88eea706867dd8f3887c20008b450eff5e4e2d48af14318",
+  "retrieved_at": "2026-09-17T03:30:04.325452+00:00",
+  "record_count": 24,
+  "truncated": false,
+  "injection_suspected": false,
+  "injection_markers": [],
+  "records": [
+    {
+      "timestamp": "2026-03-14T02:10:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 46.6
+    },
+    {
+      "timestamp": "2026-03-14T02:10:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 43.9
+    },
+    {
+      "timestamp": "2026-03-14T02:11:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 39.0
+    },
+    {
+      "timestamp": "2026-03-14T02:12:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 38.8
+    },
+    {
+      "timestamp": "2026-03-14T02:13:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 43.0
+    },
+    {
+      "timestamp": "2026-03-14T02:13:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 40.1
+    },
+    {
+      "timestamp": "2026-03-14T02:14:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 36.5
+    },
+    {
+      "timestamp": "2026-03-14T02:15:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 113.0
+    },
+    {
+      "timestamp": "2026-03-14T02:16:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 308.0
+    },
+    {
+      "timestamp": "2026-03-14T02:16:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 503.0
+    },
+    {
+      "timestamp": "2026-03-14T02:17:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 698.0
+    },
+    {
+      "timestamp": "2026-03-14T02:18:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 893.0
+    },
+    {
+      "timestamp": "2026-03-14T02:19:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1145.8
+    },
+    {
+      "timestamp": "2026-03-14T02:19:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1269.0
+    },
+    {
+      "timestamp": "2026-03-14T02:20:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1077.6
+    },
+    {
+      "timestamp": "2026-03-14T02:21:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1109.5
+    },
+    {
+      "timestamp": "2026-03-14T02:22:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1212.9
+    },
+    {
+      "timestamp": "2026-03-14T02:22:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1058.9
+    },
+    {
+      "timestamp": "2026-03-14T02:23:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1202.1
+    },
+    {
+      "timestamp": "2026-03-14T02:24:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1307.1
+    },
+    {
+      "timestamp": "2026-03-14T02:25:00+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1285.5
+    },
+    {
+      "timestamp": "2026-03-14T02:25:45+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1115.4
+    },
+    {
+      "timestamp": "2026-03-14T02:26:30+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1156.5
+    },
+    {
+      "timestamp": "2026-03-14T02:27:15+00:00",
+      "service": "payments",
+      "metric": "request_latency_p99",
+      "value": 1178.6
+    }
+  ]
+}

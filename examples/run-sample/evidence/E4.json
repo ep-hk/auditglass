@@ -1,0 +1,65 @@
+{
+  "evidence_id": "E4",
+  "kind": "logs",
+  "query": {
+    "template_id": "logs.by_service_level",
+    "backend": "fixture",
+    "kind": "logs",
+    "method": "GET",
+    "path": "/logs",
+    "params": {
+      "service": "payments",
+      "level": "error",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      },
+      "limit": 100
+    },
+    "statement": "service=payments level=error"
+  },
+  "response_hash": "sha256:d5568acd210ca81235853eb137330a000e77c2b9bba17614cf0f1c0cc7d799e4",
+  "retrieved_at": "2026-09-17T03:30:04.324181+00:00",
+  "record_count": 4,
+  "truncated": false,
+  "injection_suspected": false,
+  "injection_markers": [],
+  "records": [
+    {
+      "timestamp": "2026-03-14T02:15:00+00:00",
+      "service": "payments",
+      "level": "error",
+      "host": "payments-5c8a1e-hh2",
+      "client_ip": "IP_923bc95a",
+      "trace_id": "tr-00051a32",
+      "message": "settlement provider handshake slow: TLS renegotiation took 1283ms"
+    },
+    {
+      "timestamp": "2026-03-14T02:17:06+00:00",
+      "service": "payments",
+      "level": "error",
+      "host": "payments-5c8a1e-hh2",
+      "client_ip": "IP_923bc95a",
+      "trace_id": "tr-00051a35",
+      "message": "settlement provider handshake slow: TLS renegotiation took 721ms"
+    },
+    {
+      "timestamp": "2026-03-14T02:19:12+00:00",
+      "service": "payments",
+      "level": "error",
+      "host": "payments-5c8a1e-tt7",
+      "client_ip": "IP_9fdba02d",
+      "trace_id": "tr-00051a38",
+      "message": "settlement provider handshake slow: TLS renegotiation took 1158ms"
+    },
+    {
+      "timestamp": "2026-03-14T02:21:18+00:00",
+      "service": "payments",
+      "level": "error",
+      "host": "payments-5c8a1e-tt7",
+      "client_ip": "IP_9fdba02d",
+      "trace_id": "tr-00051a3b",
+      "message": "settlement provider handshake slow: TLS renegotiation took 906ms"
+    }
+  ]
+}

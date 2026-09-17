@@ -1,0 +1,71 @@
+# Query templates for Prometheus.
+#
+# Note what is absent: /api/v1/admin/tsdb/delete_series, /api/v1/write, and the
+# remote-write receiver. They are not declared here, and they are not declared in
+# policy.endpoints either, so a request to one is refused at two independent points.
+#
+# The `metric` enum is the complete set of metrics this deployment will look at.
+# Extending it is a reviewable configuration change.
+
+backend: prometheus
+
+templates:
+  - id: metrics.by_service_metric
+    kind: metrics
+    description: A named metric for one service over a window.
+    method: GET
+    path: /api/v1/query_range
+    params:
+      service:
+        type: enum
+        source: scope.services
+      metric:
+        type: enum
+        values:
+          - connection_pool_active
+          - connection_pool_max
+          - request_latency_p99
+          - request_latency_p50
+          - error_rate
+          - cpu_usage_ratio
+          - memory_working_set_bytes
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+      step_seconds:
+        type: int
+        min: 15
+        max: 3600
+        default: 60
+    statement: '{metric}{service="{service}"}'
+    query_params:
+      query: '{statement}'
+      start: '{window.start_unix}'
+      end: '{window.end_unix}'
+      step: '{step_seconds}'
+
+  - id: metrics.instant
+    kind: metrics
+    description: The current value of a named metric for one service.
+    method: GET
+    path: /api/v1/query
+    params:
+      service:
+        type: enum
+        source: scope.services
+      metric:
+        type: enum
+        values:
+          - connection_pool_active
+          - connection_pool_max
+          - request_latency_p99
+          - error_rate
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+    statement: '{metric}{service="{service}"}'
+    query_params:
+      query: '{statement}'
+      time: '{window.end_unix}'

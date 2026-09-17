@@ -1,0 +1,78 @@
+{
+  "incident": {
+    "incident_id": "INC-4471",
+    "primary_service": "orders",
+    "services": [
+      "orders",
+      "payments",
+      "inventory-db"
+    ],
+    "window": {
+      "start": "2026-03-14T02:10:00+00:00",
+      "end": "2026-03-14T02:30:00+00:00"
+    },
+    "trigger_source": "demo",
+    "alert": {
+      "incident_id": "INC-4471",
+      "service": "orders",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      },
+      "summary": "orders: elevated 5xx and request timeouts",
+      "source": "synthetic alert, generated for the demo"
+    }
+  },
+  "summary": "6 supported finding(s) for orders from the evidence retrieved.",
+  "findings": [
+    {
+      "statement": "orders logged 27 error(s) during the incident window.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "statement": "orders's connection pool reached 100% of its configured maximum, so requests were waiting on a connection rather than on work.",
+      "evidence_ids": [
+        "E2",
+        "E3"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "statement": "payments p99 latency rose from 42ms to 1307ms within the window (31.2x).",
+      "evidence_ids": [
+        "E6"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "statement": "The most consistent reading of the evidence is that latency degradation in payments held orders's connections open long enough to exhaust its pool, which then surfaced upstream as timeouts. This is a correlation in time across the cited evidence, not a proven cause.",
+      "evidence_ids": [
+        "E2",
+        "E3",
+        "E6"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "statement": "payments logged 4 error(s) in the same window.",
+      "evidence_ids": [
+        "E4"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "statement": "One or more evidence blocks contain instruction-like content and are marked below. Treat their narrative content as untrusted; the surrounding measurements are unaffected.",
+      "evidence_ids": [
+        "E1"
+      ],
+      "confidence": "supported"
+    }
+  ],
+  "gaps": [],
+  "termination": "evidence_sufficient",
+  "rounds_used": 3,
+  "coverage": "0 gap(s) across 3 round(s)"
+}

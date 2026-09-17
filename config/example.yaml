@@ -1,0 +1,167 @@
+# Example configuration for a real deployment: Loki for logs, Prometheus for metrics.
+#
+# Before anything else, read docs/quickstart.md §1 and create read-only service
+# accounts. This file is layer L2 of the read-only model. Layer L1 — the credential
+# that genuinely cannot write — is yours to issue, and it is the only strong
+# guarantee in the stack. A deployment that points this tool at an admin token has
+# moved the whole property onto application code written by someone else.
+#
+# Copy this file, adjust it, and keep it in version control. Its hash is recorded in
+# every run manifest, so a change to it is visible in the artefacts of every
+# subsequent run.
+
+version: 1
+
+# Window used when a trigger does not supply one.
+default_window: 1h
+
+scope:
+  # The complete set of service names any query may name. Nothing outside this list
+  # is reachable, whatever an alert payload or a model asks for.
+  services:
+    - api-gateway
+    - orders
+    - payments
+    - inventory-db
+
+  # Which downstreams may be examined when investigating a service. This is how the
+  # agent knows where to look next. It comes from here, never from log content.
+  topology:
+    api-gateway: [orders]
+    orders: [payments, inventory-db]
+
+policy:
+  endpoints:
+    - name: loki
+      backend: loki
+      scheme: https
+      host: loki.observability.internal
+      port: 3100
+      methods: [GET]
+      paths:
+        # Exact paths only. Note that /loki/api/v1/push — the write endpoint — is
+        # simply absent, so a request to it is refused here as well as by the
+        # credential.
+        - /loki/api/v1/query_range
+        - /loki/api/v1/query
+
+    - name: prometheus
+      backend: prometheus
+      scheme: https
+      host: prometheus.observability.internal
+      port: 9090
+      methods: [GET]
+      paths:
+        - /api/v1/query
+        - /api/v1/query_range
+
+    # Only needed when reasoner.kind is openai_compat. The model endpoint is
+    # allowlisted like any other destination. Point it at a local vLLM or Ollama
+    # server and no evidence leaves the organisation.
+    - name: model
+      backend: model
+      scheme: http
+      host: vllm.internal
+      port: 8000
+      methods: [POST]
+      paths:
+        - /v1/chat/completions
+
+  request_timeout: 20s
+  # Backends are often already degraded during an incident — frequently because of
+  # it. Keep this low enough that diagnosis never makes an outage worse.
+  rate_limit_per_second: 4.0
+
+budget:
+  max_queries: 12
+  max_records: 5000
+  max_rounds: 4
+  max_tokens: 120000
+  # A ceiling in money, not just tokens: different models differ by an order of
+  # magnitude, and finance approval usually wants this number.
+  max_cost_usd: 1.00
+
+redaction:
+  # run: a fresh salt each run. Tokens cannot be correlated between runs — better for
+  #      privacy, and no cross-incident pattern analysis.
+  # deployment: a salt from $AUDITGLASS_SALT. Cross-run correlation works; if the salt
+  #      leaks, low-entropy values such as IPv4 addresses become brute-forceable.
+  salt_scope: run
+
+  # true aborts the run when a field appears that no policy covers. Recommended once
+  # you know your log schema; it turns a silent drop into a loud failure.
+  strict_fields: false
+
+  # The only file that holds original values. It never leaves the run directory. Set
+  # false if run directories are shipped anywhere.
+  write_reverse_map: true
+
+  mark_injection: true
+
+  rules:
+    - private_key
+    - jwt
+    - secret_token
+    - bearer_token
+    - aws_key
+    - email
+    - nz_bank_account
+    - card_number
+    - account_number
+    - ipv4
+    - ipv6
+    - phone
+
+  custom_rules:
+    - name: internal_customer_ref
+      pattern: '\bCR-\d{7,10}\b'
+      token_prefix: CUSTREF
+
+  field_policy:
+    logs:
+      # A positive control: fields not listed never reach a planner or a reasoner.
+      allow: [timestamp, service, level, host, client_ip, trace_id, message, error]
+      # Unstructured fields: pattern-scanned and checked for injected instructions.
+      free_text: [message, error]
+      # Whole-value tokenisation, preferred wherever a field holds one identifier.
+      pseudonymise:
+        client_ip: IP
+    metrics:
+      allow: [timestamp, service, metric, value, instance]
+      pseudonymise:
+        instance: HOST
+
+audit:
+  run_root: /var/lib/auditglass/runs
+  # Run directories accumulate production-derived data. Decide this before the first
+  # production run, not after.
+  retention_days: 30
+  write_prompts: true
+
+planner:
+  # rule_based needs no model at all and is the right starting point.
+  # llm requires reasoner.kind: openai_compat.
+  kind: rule_based
+
+reasoner:
+  # rulebook: deterministic, no model, no network.
+  # openai_compat: any OpenAI-compatible endpoint, including vLLM and Ollama.
+  kind: rulebook
+  # base_url: http://vllm.internal:8000/v1
+  # model: Qwen/Qwen2.5-14B-Instruct
+  # api_key_env: AUDITGLASS_MODEL_TOKEN
+  # temperature: 0.0
+  # price_per_1k_input_usd: 0.0
+  # price_per_1k_output_usd: 0.0
+
+providers:
+  - backend: loki
+    kind: loki
+    endpoint: loki
+  - backend: prometheus
+    kind: prometheus
+    endpoint: prometheus
+
+template_files:
+  - ../query-templates/loki.yaml
+  - ../query-templates/prometheus.yaml

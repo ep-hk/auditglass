@@ -1,0 +1,76 @@
+{
+  "tool": "auditglass",
+  "tool_version": "0.1.0.dev0",
+  "started_at": "2026-09-17T03:30:04.326661+00:00",
+  "incident": {
+    "incident_id": "INC-4471",
+    "primary_service": "orders",
+    "services": [
+      "orders",
+      "payments",
+      "inventory-db"
+    ],
+    "window": {
+      "start": "2026-03-14T02:10:00+00:00",
+      "end": "2026-03-14T02:30:00+00:00"
+    },
+    "trigger_source": "demo",
+    "alert": {
+      "incident_id": "INC-4471",
+      "service": "orders",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      },
+      "summary": "orders: elevated 5xx and request timeouts",
+      "source": "synthetic alert, generated for the demo"
+    }
+  },
+  "trigger_source": "demo",
+  "config_path": "/home/claude/auditglass/src/auditglass/_demo/config.yaml",
+  "config_hash": "sha256:62701af36a3ee7976e2cda6c67eb682070ab9d2ff5a07d707f78019705063f15",
+  "template_fingerprint": "sha256:04c6fb12401697ff120af6e74cff9e7b8337b7d72bd843892f4640353d204948",
+  "template_count": 3,
+  "policy_endpoints": [
+    "demo-fixture"
+  ],
+  "planner": "rule_based",
+  "reasoner": "rulebook",
+  "model": null,
+  "redaction": {
+    "salt_scope": "run",
+    "strict_fields": false,
+    "rules": [
+      "private_key",
+      "jwt",
+      "secret_token",
+      "bearer_token",
+      "aws_key",
+      "email",
+      "card_number",
+      "account_number",
+      "ipv4",
+      "phone"
+    ],
+    "reverse_map_written": true
+  },
+  "budget": {
+    "limits": {
+      "max_queries": 12,
+      "max_records": 5000,
+      "max_rounds": 4,
+      "max_tokens": null,
+      "max_cost_usd": null
+    },
+    "consumed": {
+      "queries": 7,
+      "records": 127,
+      "rounds": 3,
+      "tokens": 0,
+      "cost_usd": 0.0
+    }
+  },
+  "run_id": "20260917T033004Z-INC-4471",
+  "status": "complete",
+  "finished_at": "2026-09-17T03:30:04.326975+00:00"
+}

@@ -1,0 +1,91 @@
+# Query templates for Grafana Loki.
+#
+# LogQL has no write form, so there is no write verb to defend against here. What
+# these templates do is bound what can be *read*: which labels may be selected, how
+# far the window may reach, and how many lines may come back.
+#
+# Adjust the label names to match your own labelling scheme. The `service` enum draws
+# from scope.services in your configuration, so adding a service is a configuration
+# change and not a template change.
+
+backend: loki
+
+templates:
+  - id: logs.by_service_level
+    kind: logs
+    description: Log lines for one service at one severity.
+    method: GET
+    path: /loki/api/v1/query_range
+    params:
+      service:
+        type: enum
+        source: scope.services
+      level:
+        type: enum
+        values: [error, warn, info, debug]
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+      limit:
+        type: int
+        min: 1
+        max: 5000
+        default: 500
+    statement: '{app="{service}"} | json | level="{level}"'
+    query_params:
+      query: '{statement}'
+      start: '{window.start_ns}'
+      end: '{window.end_ns}'
+      limit: '{limit}'
+      direction: backward
+
+  - id: logs.by_trace
+    kind: logs
+    description: >-
+      Every line carrying a trace id. The id must be one observed in evidence already
+      retrieved during this run.
+    method: GET
+    path: /loki/api/v1/query_range
+    params:
+      service:
+        type: enum
+        source: scope.services
+      trace_id:
+        type: ref
+        from: trace_id
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+      limit:
+        type: int
+        min: 1
+        max: 2000
+        default: 200
+    statement: '{app="{service}"} | json | trace_id="{trace_id}"'
+    query_params:
+      query: '{statement}'
+      start: '{window.start_ns}'
+      end: '{window.end_ns}'
+      limit: '{limit}'
+
+  - id: logs.error_rate_by_service
+    kind: logs
+    description: Count of error lines per minute, as a metric query over logs.
+    method: GET
+    path: /loki/api/v1/query_range
+    params:
+      service:
+        type: enum
+        source: scope.services
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+    statement: 'sum(count_over_time({app="{service}"} | json | level="error" [1m]))'
+    query_params:
+      query: '{statement}'
+      start: '{window.start_unix}'
+      end: '{window.end_unix}'
+      step: '60'

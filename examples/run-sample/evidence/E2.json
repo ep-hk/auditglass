@@ -1,0 +1,172 @@
+{
+  "evidence_id": "E2",
+  "kind": "metrics",
+  "query": {
+    "template_id": "metrics.by_service_metric",
+    "backend": "fixture",
+    "kind": "metrics",
+    "method": "GET",
+    "path": "/metrics",
+    "params": {
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      }
+    },
+    "statement": "service=orders metric=connection_pool_active"
+  },
+  "response_hash": "sha256:94e4f342f04329019c1c662ca16ceeb584676d1b066c7e84e82801d6e5445c13",
+  "retrieved_at": "2026-09-17T03:30:04.322505+00:00",
+  "record_count": 24,
+  "truncated": false,
+  "injection_suspected": false,
+  "injection_markers": [],
+  "records": [
+    {
+      "timestamp": "2026-03-14T02:10:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 14.0
+    },
+    {
+      "timestamp": "2026-03-14T02:10:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 8.0
+    },
+    {
+      "timestamp": "2026-03-14T02:11:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 8.0
+    },
+    {
+      "timestamp": "2026-03-14T02:12:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 16.0
+    },
+    {
+      "timestamp": "2026-03-14T02:13:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 15.0
+    },
+    {
+      "timestamp": "2026-03-14T02:13:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 16.0
+    },
+    {
+      "timestamp": "2026-03-14T02:14:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 13.0
+    },
+    {
+      "timestamp": "2026-03-14T02:15:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 18.0
+    },
+    {
+      "timestamp": "2026-03-14T02:16:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 25.0
+    },
+    {
+      "timestamp": "2026-03-14T02:16:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 31.0
+    },
+    {
+      "timestamp": "2026-03-14T02:17:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 38.0
+    },
+    {
+      "timestamp": "2026-03-14T02:18:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:19:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:19:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:20:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:21:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:22:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:22:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:23:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:24:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:25:00+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:25:45+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:26:30+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    },
+    {
+      "timestamp": "2026-03-14T02:27:15+00:00",
+      "service": "orders",
+      "metric": "connection_pool_active",
+      "value": 50.0
+    }
+  ]
+}

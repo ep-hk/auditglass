@@ -1,0 +1,28 @@
+{
+  "evidence_id": "E5",
+  "kind": "logs",
+  "query": {
+    "template_id": "logs.by_service_level",
+    "backend": "fixture",
+    "kind": "logs",
+    "method": "GET",
+    "path": "/logs",
+    "params": {
+      "service": "inventory-db",
+      "level": "error",
+      "window": {
+        "start": "2026-03-14T02:10:00+00:00",
+        "end": "2026-03-14T02:30:00+00:00"
+      },
+      "limit": 100
+    },
+    "statement": "service=inventory-db level=error"
+  },
+  "response_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "retrieved_at": "2026-09-17T03:30:04.324662+00:00",
+  "record_count": 0,
+  "truncated": false,
+  "injection_suspected": false,
+  "injection_markers": [],
+  "records": []
+}
