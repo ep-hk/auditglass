@@ -1,0 +1,102 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "auditglass"
+version = "0.1.0.dev0"
+description = "Read-only incident forensics for engineers who don't have production access"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Ethan Peng" }]
+keywords = [
+  "incident-response",
+  "observability",
+  "segregation-of-duties",
+  "compliance",
+  "audit",
+  "sre",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Monitoring",
+  "Topic :: Security",
+]
+dependencies = [
+  "pydantic>=2.6,<3",
+  "PyYAML>=6.0",
+  "httpx>=0.27",
+  "click>=8.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "types-PyYAML>=6"]
+
+[project.urls]
+Homepage = "https://github.com/ep-hk/auditglass"
+Source = "https://github.com/ep-hk/auditglass"
+Issues = "https://github.com/ep-hk/auditglass/issues"
+Security = "https://github.com/ep-hk/auditglass/blob/main/SECURITY.md"
+
+[project.scripts]
+auditglass = "auditglass.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/auditglass"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/auditglass/_demo" = "auditglass/_demo"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/docs",
+  "/demo",
+  "/config",
+  "/query-templates",
+  "/README.md",
+  "/LICENSE",
+  "/SECURITY.md",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+  "E501",    # line length is handled by the formatter
+  "B008",    # click uses callables in defaults
+  "RUF001",  # the demo fixture intentionally contains non-ASCII
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+  "adversarial: tests that assert a control holds under attack",
+]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["auditglass"]
+ignore_missing_imports = true
+warn_unused_ignores = false
+# Stub availability is environment-dependent (types-PyYAML is a dev extra), and a
+# missing stub is not a defect in this code.
+disable_error_code = ["import-untyped"]
