@@ -1,0 +1,30 @@
+{
+  "_comment": "Labelled corpus for measuring redaction recall. Every value here is invented. Addresses use RFC 5737 documentation ranges, domains use RFC 2606 reserved names, card numbers are Luhn-valid but belong to no issuer's live range. The 'hard' cases are the ones expected to fail — they are in the corpus precisely so the published recall figure is honest rather than flattering.",
+  "cases": [
+    {"text": "order placed by rangi.walker@example.com", "expect": ["email"], "difficulty": "easy"},
+    {"text": "notification sent to MEI.TAN+billing@Example.ORG", "expect": ["email"], "difficulty": "easy"},
+    {"text": "client 203.0.113.47 disconnected", "expect": ["ipv4"], "difficulty": "easy"},
+    {"text": "upstream 198.51.100.8:8443 refused", "expect": ["ipv4"], "difficulty": "easy"},
+    {"text": "peer 2001:0db8:85a3:0000:0000:8a2e:0370:7334 handshake failed", "expect": ["ipv6"], "difficulty": "easy"},
+    {"text": "settling card 4539578763621486 declined", "expect": ["card_number"], "difficulty": "easy"},
+    {"text": "card 4485 9604 1224 7067 authorised", "expect": ["card_number"], "difficulty": "medium"},
+    {"text": "lookup for acct-88413920 returned nothing", "expect": ["account_number"], "difficulty": "easy"},
+    {"text": "customer CUST0099213 flagged", "expect": ["account_number"], "difficulty": "medium"},
+    {"text": "deposit to 01-0902-0123456-00 pending", "expect": ["nz_bank_account"], "difficulty": "medium"},
+    {"text": "auth header Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.abcdefghijklmnop rejected", "expect": ["bearer_token", "jwt"], "difficulty": "easy"},
+    {"text": "using key sk-live_9f2b7c4e1a8d6350fabc", "expect": ["secret_token"], "difficulty": "easy"},
+    {"text": "AKIAIOSFODNN7EXAMPLE used for upload", "expect": ["aws_key"], "difficulty": "easy"},
+    {"text": "slack callback token xoxb-2468013579-abcdefghijklmnop failed", "expect": ["secret_token"], "difficulty": "easy"},
+    {"text": "-----BEGIN RSA PRIVATE KEY----- MIIEow...", "expect": ["private_key"], "difficulty": "easy"},
+    {"text": "callback to +64 21 555 0134 failed", "expect": ["phone"], "difficulty": "medium"},
+    {"text": "sms gateway rejected +1 (415) 555-0199", "expect": ["phone"], "difficulty": "medium"},
+    {"text": "user j.okafor@example.net from 192.0.2.144 paid with 4716347184862102", "expect": ["email", "ipv4", "card_number"], "difficulty": "easy"},
+
+    {"text": "user id 88413920 not found", "expect": ["account_number"], "difficulty": "hard", "note": "a bare digit run with no keyword; deliberately not matched, because matching it would eat timestamps and ids"},
+    {"text": "contact: rangi dot walker at example dot com", "expect": ["email"], "difficulty": "hard", "note": "obfuscated spelling"},
+    {"text": "payload cmFuZ2kud2Fsa2VyQGV4YW1wbGUuY29t decoded", "expect": ["email"], "difficulty": "hard", "note": "base64-encoded PII"},
+    {"text": "客户 mei.tan@example.org 的订单失败", "expect": ["email"], "difficulty": "medium", "note": "non-Latin surrounding text"},
+    {"text": "stack: at Billing.charge(card=4539578763621486)", "expect": ["card_number"], "difficulty": "medium"},
+    {"text": "SELECT * FROM users WHERE email='mei.tan@example.org'", "expect": ["email"], "difficulty": "medium", "note": "PII inside a SQL fragment"}
+  ]
+}
