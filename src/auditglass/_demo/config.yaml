@@ -1,0 +1,97 @@
+# Configuration for `auditglass demo`.
+#
+# Everything this points at is synthetic and lives in this repository. There are no
+# credentials here because the demo makes no network request at all.
+#
+# It is still a complete configuration: the same policy, template and redaction
+# machinery a real deployment uses runs against the fixture, including PolicyGuard.
+
+version: 1
+default_window: 1h
+
+scope:
+  # The complete set of service names any template parameter may take. A planner
+  # cannot name anything outside this list, and neither can an alert payload.
+  services:
+    - api-gateway
+    - orders
+    - payments
+    - inventory-db
+
+  # Which downstreams may be examined when investigating a given service. This is
+  # how the agent knows where to look next — from configuration, never from
+  # something it read in a log line.
+  topology:
+    api-gateway: [orders]
+    orders: [payments, inventory-db]
+
+policy:
+  endpoints:
+    # The fixture makes no request, but it is still declared and still goes through
+    # PolicyGuard, so the demo exercises the control rather than stepping around it.
+    - name: demo-fixture
+      backend: fixture
+      scheme: http
+      host: fixture.invalid
+      port: 9999
+      methods: [GET]
+      paths:
+        - /logs
+        - /metrics
+
+budget:
+  max_queries: 12
+  max_records: 5000
+  max_rounds: 4
+  max_tokens: null
+  max_cost_usd: null
+
+redaction:
+  salt_scope: run
+  strict_fields: false
+  write_reverse_map: true
+  mark_injection: true
+  rules:
+    - private_key
+    - jwt
+    - secret_token
+    - bearer_token
+    - aws_key
+    - email
+    - card_number
+    - account_number
+    - ipv4
+    - phone
+  field_policy:
+    logs:
+      # Fields not listed here never reach a planner or a reasoner at all.
+      allow: [timestamp, service, level, host, client_ip, trace_id, message]
+      # Unstructured: pattern-scanned and checked for injected instructions.
+      free_text: [message]
+      # Whole-value tokenisation. Note host is deliberately NOT here: hostnames are
+      # not personal data, and leaving them readable makes "every error came from one
+      # pod" visible in the report.
+      pseudonymise:
+        client_ip: IP
+    metrics:
+      allow: [timestamp, service, metric, value]
+
+audit:
+  run_root: ./runs
+  retention_days: 30
+  write_prompts: true
+
+planner:
+  kind: rule_based
+
+reasoner:
+  kind: rulebook
+
+providers:
+  - backend: fixture
+    kind: fixture
+    fixture_path: fixtures/incident.json
+    endpoint: demo-fixture
+
+template_files:
+  - templates/fixture.yaml

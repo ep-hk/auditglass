@@ -1,0 +1,76 @@
+# Query templates for the demo fixture backend.
+#
+# This file is the complete set of things the demo can ask for. There is no template
+# that accepts free text, so there is no query a planner can express that is not
+# described here.
+
+backend: fixture
+
+templates:
+  - id: logs.by_service_level
+    kind: logs
+    description: Log lines for one service at one severity, within a time window.
+    method: GET
+    path: /logs
+    params:
+      service:
+        type: enum
+        source: scope.services
+      level:
+        type: enum
+        values: [error, warn, info]
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+      limit:
+        type: int
+        min: 1
+        max: 5000
+        default: 200
+    statement: 'service={service} level={level}'
+
+  - id: logs.by_trace
+    kind: logs
+    description: >-
+      Every log line sharing a trace id. The trace id must be one that appeared in
+      evidence already retrieved during this run — a planner can follow a trace it
+      genuinely saw, but cannot invent an identifier.
+    method: GET
+    path: /logs
+    params:
+      trace_id:
+        type: ref
+        from: trace_id
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+      limit:
+        type: int
+        min: 1
+        max: 1000
+        default: 100
+    statement: 'trace_id={trace_id}'
+
+  - id: metrics.by_service_metric
+    kind: metrics
+    description: One named metric for one service, within a time window.
+    method: GET
+    path: /metrics
+    params:
+      service:
+        type: enum
+        source: scope.services
+      metric:
+        type: enum
+        values:
+          - connection_pool_active
+          - connection_pool_max
+          - request_latency_p99
+          - error_rate
+      window:
+        type: timerange
+        max: 6h
+        must_intersect: incident
+    statement: 'service={service} metric={metric}'

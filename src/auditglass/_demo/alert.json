@@ -1,0 +1,10 @@
+{
+  "incident_id": "INC-4471",
+  "service": "orders",
+  "window": {
+    "start": "2026-03-14T02:10:00+00:00",
+    "end": "2026-03-14T02:30:00+00:00"
+  },
+  "summary": "orders: elevated 5xx and request timeouts",
+  "source": "synthetic alert, generated for the demo"
+}
