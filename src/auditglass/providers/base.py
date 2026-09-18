@@ -14,9 +14,34 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from ..config import EndpointPolicy
+from ..errors import ProviderError
 from ..models import OutboundRequest, RenderedQuery
 from ..policy.http import ConstrainedHTTPClient
 from ..policy.templates import query_params_of
+
+
+def ensure_success(body: Any, backend: str) -> dict[str, Any]:
+    """Validate the response envelope and return its ``data`` object.
+
+    Both Loki and Prometheus can answer HTTP 200 with ``{"status": "error", ...}``.
+    Parsing such a body would yield an empty record list — indistinguishable from
+    "nothing matched". In a tool whose entire value rests on being honest about what
+    it could and could not see, a failed query that reads as "no errors found" is the
+    worst possible failure mode, so it is raised instead. The run loop turns it into a
+    recorded evidence gap, which is what the reader should see.
+    """
+    if not isinstance(body, dict):
+        raise ProviderError(
+            f"{backend} returned {type(body).__name__}, not a JSON object"
+        )
+    status = body.get("status")
+    # A missing status is tolerated: gateways and proxies sometimes strip the
+    # envelope. A status that is present and not "success" never is.
+    if status is not None and status != "success":
+        detail = body.get("error") or body.get("errorType") or status
+        raise ProviderError(f"{backend} returned an error response: {detail}")
+    data = body.get("data")
+    return data if isinstance(data, dict) else {}
 
 
 def build_request(query: RenderedQuery, endpoint: EndpointPolicy) -> OutboundRequest:

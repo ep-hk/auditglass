@@ -74,33 +74,43 @@ class PolicyGuard:
                 f"method {method} is not one this tool emits", rule="method-unsupported"
             )
 
-        endpoint = self._match_endpoint(request)
-        if endpoint is None:
+        at_destination = self._endpoints_at(request)
+        if not at_destination:
             return Decision.deny(
                 f"{request.scheme}://{request.host}:{request.port} is not a declared "
                 f"endpoint",
                 rule="host-not-allowlisted",
             )
 
-        if request.path not in endpoint.paths:
+        serving = [e for e in at_destination if request.path in e.paths]
+        if not serving:
+            permitted = sorted({p for e in at_destination for p in e.paths})
+            names = sorted(e.name for e in at_destination)
             return Decision.deny(
-                f"path {request.path!r} is not permitted on endpoint {endpoint.name!r}; "
-                f"permitted paths are {sorted(endpoint.paths)}",
+                f"path {request.path!r} is not permitted at "
+                f"{request.scheme}://{request.host}:{request.port} "
+                f"(endpoint(s) {names}); permitted paths are {permitted}",
                 rule="path-not-allowlisted",
             )
+
+        if request.backend:
+            matching = [e for e in serving if e.backend == request.backend]
+            if not matching:
+                return Decision.deny(
+                    f"backend {request.backend!r} does not match any endpoint serving "
+                    f"{request.path!r}; that path is served by "
+                    f"{sorted({e.backend for e in serving})}",
+                    rule="backend-mismatch",
+                )
+            endpoint = matching[0]
+        else:
+            endpoint = serving[0]
 
         if method not in endpoint.methods:
             return Decision.deny(
                 f"method {method} is not permitted on endpoint {endpoint.name!r}; "
                 f"permitted methods are {sorted(endpoint.methods)}",
                 rule="method-not-allowlisted",
-            )
-
-        if request.backend and request.backend != endpoint.backend:
-            return Decision.deny(
-                f"backend {request.backend!r} does not match endpoint "
-                f"{endpoint.name!r} which serves {endpoint.backend!r}",
-                rule="backend-mismatch",
             )
 
         verdict = self._verify_statement(request)
@@ -115,15 +125,21 @@ class PolicyGuard:
 
     # ------------------------------------------------------------------ #
 
-    def _match_endpoint(self, request: OutboundRequest):
-        for endpoint in self._policy.endpoints:
-            if (
-                endpoint.scheme == request.scheme
-                and endpoint.host == request.host
-                and endpoint.effective_port() == request.port
-            ):
-                return endpoint
-        return None
+    def _endpoints_at(self, request: OutboundRequest):
+        """Every declared endpoint sharing this request's destination.
+
+        More than one is normal rather than exotic: an observability gateway commonly
+        fronts Loki at ``/loki/*`` and Prometheus at ``/api/v1/*`` on one host and
+        port. Matching only the first endpoint at a destination would permanently deny
+        the second backend, and blame the wrong endpoint in the message while doing it.
+        """
+        return [
+            endpoint
+            for endpoint in self._policy.endpoints
+            if endpoint.scheme == request.scheme
+            and endpoint.host == request.host
+            and endpoint.effective_port() == request.port
+        ]
 
     def _verify_statement(self, request: OutboundRequest) -> Decision | None:
         """Re-derive the statement and require an exact match.

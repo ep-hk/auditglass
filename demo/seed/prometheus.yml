@@ -1,0 +1,16 @@
+# Scrape config for the demo stack. Frequent scrapes so a usable range exists
+# within a minute or two rather than fifteen.
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: synthetic-services
+    static_configs:
+      - targets: ["seeder:8000"]
+    # The seeder already labels each series with the service it belongs to; keep the
+    # instance label off the series so it does not have to be redacted.
+    metric_relabel_configs:
+      - regex: instance
+        action: labeldrop

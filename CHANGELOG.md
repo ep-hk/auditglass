@@ -5,6 +5,45 @@ Versioning is [semantic](https://semver.org/); pre-1.0, minor versions may break
 
 ## [Unreleased]
 
+### Fixed
+
+Four defects, all found by writing the connector tests that should have existed from
+the start. The Loki and Prometheus connectors had shipped with **no test touching
+them at all**, while the README described them as working.
+
+- **A backend error response read as "nothing matched".** Both Loki and Prometheus can
+  answer HTTP 200 with `{"status": "error", ...}`; `parse()` returned an empty record
+  list for that, so a failed query became "no errors found" in the report. For a tool
+  whose value rests on being honest about what it could not see, this was the worst
+  available failure mode. Error envelopes now raise and become recorded evidence gaps.
+- **Two backends could not share a host and port.** PolicyGuard matched the first
+  endpoint at a destination and then rejected the path against it, so an observability
+  gateway fronting Loki at `/loki/*` and Prometheus at `/api/v1/*` on one host — a
+  normal deployment — permanently denied the second backend, blaming the wrong
+  endpoint in the message. Endpoints are now selected by destination *and* path.
+- **An unreadable Prometheus response was silent.** A `scalar` result type, or a sample
+  value that would not parse, produced empty or `None` rather than an error.
+- **The audit hook could crash its caller.** A PolicyGuard denial outside an open run
+  raised `AssertionError` from the sink. Denials are now buffered and flushed when the
+  run opens.
+
+### Added
+
+- `tests/test_providers_parse.py` — response handling against the real wire formats,
+  including nanosecond string timestamps, `NaN`/`+Inf`, metrics with no `__name__`
+  after a function, error envelopes and malformed points.
+- `tests/test_providers_http.py` — the connectors over real HTTP against a stub that
+  speaks the real formats, asserting what actually goes out on the wire.
+- `demo/docker-compose.yml` and `demo/seed/` — real Loki and real Prometheus with a
+  seeder playing the incident into them live.
+- `tests/integration/` and `config/demo-live.yaml` — the check that only real servers
+  can answer, run in CI by the `live-backends` job.
+
+### Changed
+
+- README now separates what has been exercised from what has merely been written, and
+  points at git install rather than PyPI until the package is published.
+
 ### Planned for v0.1.0
 
 - Elastic connector

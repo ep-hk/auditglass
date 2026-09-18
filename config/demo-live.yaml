@@ -1,0 +1,104 @@
+# Configuration for the live demo stack in demo/docker-compose.yml.
+#
+# This is the only configuration in the repository that points at real servers, and
+# they are local throwaway containers. It is what tests/integration uses, and what to
+# copy when wiring a first real deployment — with the credentials section filled in,
+# which here is empty because the demo containers have no auth.
+#
+#   docker compose -f demo/docker-compose.yml up -d
+#   auditglass run --config config/demo-live.yaml --service orders --since 5m
+
+version: 1
+default_window: 5m
+
+scope:
+  services:
+    - api-gateway
+    - orders
+    - payments
+    - inventory-db
+  topology:
+    api-gateway: [orders]
+    orders: [payments, inventory-db]
+
+policy:
+  endpoints:
+    - name: loki
+      backend: loki
+      scheme: http
+      host: 127.0.0.1
+      port: 3100
+      methods: [GET]
+      paths:
+        # /loki/api/v1/push is deliberately absent. The seeder writes through it;
+        # this tool cannot reach it.
+        - /loki/api/v1/query_range
+        - /loki/api/v1/query
+
+    - name: prometheus
+      backend: prometheus
+      scheme: http
+      host: 127.0.0.1
+      port: 9090
+      methods: [GET]
+      paths:
+        - /api/v1/query
+        - /api/v1/query_range
+
+  request_timeout: 15s
+  rate_limit_per_second: 10.0
+
+budget:
+  max_queries: 12
+  max_records: 5000
+  max_rounds: 4
+  max_tokens: null
+  max_cost_usd: null
+
+redaction:
+  salt_scope: run
+  strict_fields: false
+  write_reverse_map: true
+  mark_injection: true
+  rules:
+    - private_key
+    - jwt
+    - secret_token
+    - bearer_token
+    - aws_key
+    - email
+    - card_number
+    - account_number
+    - ipv4
+    - phone
+  field_policy:
+    logs:
+      allow: [timestamp, service, level, message, client_ip, trace_id, app, pod]
+      free_text: [message]
+      pseudonymise:
+        client_ip: IP
+    metrics:
+      allow: [timestamp, service, metric, value, job]
+
+audit:
+  run_root: ./runs
+  retention_days: 7
+  write_prompts: true
+
+planner:
+  kind: rule_based
+
+reasoner:
+  kind: rulebook
+
+providers:
+  - backend: loki
+    kind: loki
+    endpoint: loki
+  - backend: prometheus
+    kind: prometheus
+    endpoint: prometheus
+
+template_files:
+  - ../query-templates/loki.yaml
+  - ../query-templates/prometheus.yaml

@@ -60,6 +60,11 @@ class LocalRunDirectory:
         self.run_dir: Path | None = None
         self.run_id: str = ""
         self._evidence: list[EvidenceRecord] = []
+        #: Denials that happened before a run opened — a policy check, or a client
+        #: used directly. They are buffered rather than dropped, and never allowed to
+        #: raise: an audit hook that can crash the thing it audits is worse than no
+        #: hook, and PolicyGuard calls this from inside its refusal path.
+        self._pending_denials: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ #
 
@@ -74,6 +79,9 @@ class LocalRunDirectory:
         (self.run_dir / "prompts").mkdir(parents=True, exist_ok=True)
         # Written immediately so an aborted run still has provenance.
         self._write_manifest({**manifest, "run_id": self.run_id, "status": "running"})
+        for entry in self._pending_denials:
+            _append_jsonl(self._path("denials.jsonl"), entry)
+        self._pending_denials.clear()
         return self.run_id
 
     def _write_manifest(self, manifest: dict[str, Any]) -> None:
@@ -92,15 +100,16 @@ class LocalRunDirectory:
         _append_jsonl(self._path("queries.jsonl"), {"at": utcnow(), **query.to_dict()})
 
     def record_denial(self, request: OutboundRequest, decision: Decision) -> None:
-        _append_jsonl(
-            self._path("denials.jsonl"),
-            {
-                "at": utcnow(),
-                "request": request.describe(),
-                "rule": decision.rule,
-                "reason": decision.reason,
-            },
-        )
+        entry = {
+            "at": utcnow(),
+            "request": request.describe(),
+            "rule": decision.rule,
+            "reason": decision.reason,
+        }
+        if self.run_dir is None:
+            self._pending_denials.append(entry)
+            return
+        _append_jsonl(self._path("denials.jsonl"), entry)
 
     def record_evidence(self, evidence: EvidenceRecord) -> None:
         self._evidence.append(evidence)

@@ -11,14 +11,14 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from .base import HTTPBackedProvider
+from .base import HTTPBackedProvider, ensure_success
 
 
 class LokiProvider(HTTPBackedProvider):
     backend = "loki"
 
     def parse(self, body: Any) -> list[dict[str, Any]]:
-        data = (body or {}).get("data") or {}
+        data = ensure_success(body, "Loki")
         records: list[dict[str, Any]] = []
         for stream in data.get("result", []):
             labels = dict(stream.get("stream") or {})

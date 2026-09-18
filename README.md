@@ -53,9 +53,11 @@ starting point for a security or compliance reviewer.
 No backend, no credentials, no API key, no model download:
 
 ```bash
-pip install auditglass
+pip install git+https://github.com/ep-hk/auditglass
 auditglass demo
 ```
+
+(Not on PyPI yet, so the install is from git for now.)
 
 That runs a synthetic incident end to end and writes a run directory. The incident is
 deliberately not solvable in one query — round one sees timeouts and cannot say why —
@@ -187,16 +189,35 @@ CI runs the full pipeline in a container with no outbound network to keep that c
 
 ## Status
 
-**v0.1.0.dev0 — early.** The architecture and the controls are in place and tested;
-the connector set is small. Working today: CLI and alert-payload triggers, PolicyGuard,
-the template layer, Loki and Prometheus connectors, pseudonymising redaction,
-rule-based and LLM planners, rulebook and OpenAI-compatible reasoners, the full audit
-trail and report.
+**v0.1.0.dev0 — early.** Read this section before deciding whether to try it; it
+distinguishes what has been exercised from what has merely been written.
 
-Not yet: webhook and polling triggers, Elastic and Splunk connectors, pluggable audit
-sinks, fixture replay, per-requester authorisation. See
+**Exercised end to end, with tests:** CLI and alert-payload triggers, PolicyGuard, the
+template layer, pseudonymising redaction, the rule-based planner, the rulebook
+reasoner, the full audit trail and report. `auditglass demo` runs all of this against
+a synthetic incident, and the adversarial and structural suites run against it too.
+
+**Written, and exercised only against recorded backend responses and a local stub —
+not yet against a live server:** the Loki and Prometheus connectors. The unit and
+HTTP-level tests cover request construction, policy mediation and response parsing, so
+the code path is tested; what is *not* yet confirmed is that a real Loki accepts the
+LogQL these templates generate, and likewise for PromQL. `demo/docker-compose.yml`
+stands up real Loki and Prometheus for exactly that check —
+`AUDITGLASS_LIVE=1 pytest tests/integration -v`. Until that job has run green in CI,
+treat these two connectors as unverified against real servers, and please report what
+breaks.
+
+**Written but not exercised at all:** the LLM planner and the OpenAI-compatible
+reasoner. Both are schema-validated and unit-tested, but neither has been run against
+an actual model endpoint.
+
+**Not present:** webhook and polling triggers, Elastic and Splunk connectors,
+pluggable audit sinks, fixture replay, per-requester authorisation. See
 [`docs/requirements.md`](docs/requirements.md) for the full scope and
 [`CHANGELOG.md`](CHANGELOG.md).
+
+Also not yet on PyPI: until it is, install with
+`pip install git+https://github.com/ep-hk/auditglass`.
 
 A Splunk connector specification is written up in
 [`docs/writing-a-connector.md`](docs/writing-a-connector.md) and community

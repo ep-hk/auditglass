@@ -39,6 +39,39 @@ auditglass demo --max-rounds 1
 There is a CI job asserting this stays true. If the incident ever becomes solvable in
 one query, the premise of the project is visibly false to anyone running the demo.
 
+## The live stack — real Loki, real Prometheus
+
+The offline demo above proves the pipeline. It cannot prove that a real Loki accepts
+the LogQL the templates generate, because there is no Loki in it. That is what this
+is for:
+
+```bash
+docker compose -f demo/docker-compose.yml up -d --wait
+auditglass run --config config/demo-live.yaml --service orders --since 5m
+```
+
+A seeder plays the same incident into real servers live: it pushes logs into Loki and
+exposes metrics for Prometheus to scrape, with a healthy period followed by a ramp.
+Give it about 90 seconds before the first run so there is a usable time range.
+
+The automated version of the same check:
+
+```bash
+AUDITGLASS_LIVE=1 pytest tests/integration -v
+docker compose -f demo/docker-compose.yml down -v
+```
+
+Those tests are skipped without `AUDITGLASS_LIVE=1`, so the ordinary suite still needs
+no backend. The assertion that matters there is not "findings were produced" — a run
+produces a report even when every query failed, by design — but that **no evidence gap
+names a query error**. A gap saying `parse error at line 1` is a broken template, and
+it is precisely what the offline tests cannot see.
+
+Note what the seeder does that this tool cannot: it writes, through
+`/loki/api/v1/push`. That path is deliberately absent from `policy.endpoints` in
+`config/demo-live.yaml`, and `tests/integration` asserts the refusal against the same
+live server the seeder is successfully writing to.
+
 ## Other things to try
 
 ```bash
