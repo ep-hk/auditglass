@@ -6,10 +6,12 @@
 # PromQL? Everything else about the connectors is covered by tests that need no
 # backend.
 #
-#   docker compose -f demo/docker-compose.yml up -d
-#   # wait ~90s for a usable time range, then:
+#   docker compose -f demo/docker-compose.yml up -d --wait
 #   AUDITGLASS_LIVE=1 pytest tests/integration -v
 #   docker compose -f demo/docker-compose.yml down -v
+#
+# No manual wait is needed: the test blocks until the incident has fully developed
+# on both backends, about two minutes after start-up, then runs one diagnosis.
 #
 # The seeder writes to Loki. auditglass cannot — that asymmetry is the point, and
 # `tests/integration/test_live_backends.py` asserts it against these same servers.
@@ -23,7 +25,7 @@ services:
     ports:
       - "3100:3100"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:3100/ready | grep -q ready"]
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3100/ready | grep -qx ready"]
       interval: 5s
       timeout: 3s
       retries: 30
@@ -57,8 +59,10 @@ services:
     command: ["python", "-u", "seed.py"]
     environment:
       LOKI_URL: http://loki:3100
-      # How long the healthy period lasts before the incident starts, and how long
-      # the ramp takes. Lower it to make the integration test finish sooner.
+      # Healthy for 75s, then the incident develops over 30s. The healthy period
+      # must outlast one 60s query step or the diagnosis has no baseline to compare
+      # against; see the docstring in seed/seed.py before shortening it.
+      HEALTHY_SECONDS: "75"
       RAMP_SECONDS: "30"
       METRICS_PORT: "8000"
     ports:

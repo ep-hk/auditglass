@@ -27,6 +27,29 @@ them at all**, while the README described them as working.
   raised `AssertionError` from the sink. Denials are now buffered and flushed when the
   run opens.
 
+CI had failed on every run since the first push, and that went unnoticed. The
+consequences were worse than a red badge:
+
+- **The test suite never ran in CI.** The type-check step failed under mypy 2 — a
+  lambda default for a `list[Literal[...]]` field, and a dead URL helper — and every
+  step after it was skipped. The typing is fixed and the dead helper removed.
+- **`pip install git+https://...` — the README's install command — did not work.** The
+  wheel config listed the bundled demo directory twice, which hatchling refuses to
+  build. An editable install never builds a wheel, so nothing local showed it. The
+  duplicate is gone and the `build` job installs the built wheel and runs the demo.
+- **The no-egress job could not start.** GitHub's Ubuntu 24.04 runners forbid
+  unprivileged user namespaces, so `unshare -rn` failed before the pipeline ran. It now
+  uses `sudo unshare -n`, and still proves the namespace has no route out first.
+- **The live-backend tests ran before the incident and asserted over empty lists.**
+  They waited for any data, ran during the seeder's healthy period, and several
+  passed while checking nothing. They now wait until the incident has developed,
+  every check first asserts it has something to check, and the causal assertion
+  names each finding it expects. Run against real Loki 3.3.2 and Prometheus 3.1.0,
+  that stricter version then found one more thing: with only a minute of history, a
+  60-second query step leaves one sample per series, so the run could not see latency
+  rise. The loose assertion had passed anyway. The seeder now stays healthy for longer
+  than one step, and the test fails with an explanation if that ever stops holding.
+
 ### Added
 
 - `tests/test_providers_parse.py` — response handling against the real wire formats,
@@ -42,7 +65,9 @@ them at all**, while the README described them as working.
 ### Changed
 
 - README now separates what has been exercised from what has merely been written, and
-  points at git install rather than PyPI until the package is published.
+  points at git install rather than PyPI until the package is published. The Loki and
+  Prometheus connectors move from "not yet run against a live server" to "exercised
+  against small synthetic ones", with the limits of that stated.
 
 ### Planned for v0.1.0
 

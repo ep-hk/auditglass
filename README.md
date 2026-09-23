@@ -171,7 +171,8 @@ reasoner:
   base_url: http://vllm.internal:8000/v1   # or Ollama
 ```
 
-CI runs the full pipeline in a container with no outbound network to keep that claim true.
+CI runs the full pipeline with networking removed — a network namespace with only
+loopback — to keep that claim true.
 
 ---
 
@@ -197,15 +198,13 @@ template layer, pseudonymising redaction, the rule-based planner, the rulebook
 reasoner, the full audit trail and report. `auditglass demo` runs all of this against
 a synthetic incident, and the adversarial and structural suites run against it too.
 
-**Written, and exercised only against recorded backend responses and a local stub —
-not yet against a live server:** the Loki and Prometheus connectors. The unit and
-HTTP-level tests cover request construction, policy mediation and response parsing, so
-the code path is tested; what is *not* yet confirmed is that a real Loki accepts the
-LogQL these templates generate, and likewise for PromQL. `demo/docker-compose.yml`
-stands up real Loki and Prometheus for exactly that check —
-`AUDITGLASS_LIVE=1 pytest tests/integration -v`. Until that job has run green in CI,
-treat these two connectors as unverified against real servers, and please report what
-breaks.
+**Exercised against real servers, but only small synthetic ones:** the Loki and
+Prometheus connectors. `demo/docker-compose.yml` stands up Loki 3.3.2 and Prometheus
+3.1.0 with a seeder playing the demo incident into them, and the `live-backends` CI job
+asserts that every generated LogQL and PromQL query is accepted, that both return
+data, and that the run reaches the same causal finding as the offline demo. What that
+does *not* cover: other versions, authentication in front of either backend, and the
+volume and cardinality of a real estate. Please report what breaks.
 
 **Written but not exercised at all:** the LLM planner and the OpenAI-compatible
 reasoner. Both are schema-validated and unit-tested, but neither has been run against

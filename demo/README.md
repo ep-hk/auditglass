@@ -51,8 +51,15 @@ auditglass run --config config/demo-live.yaml --service orders --since 5m
 ```
 
 A seeder plays the same incident into real servers live: it pushes logs into Loki and
-exposes metrics for Prometheus to scrape, with a healthy period followed by a ramp.
-Give it about 90 seconds before the first run so there is a usable time range.
+exposes metrics for Prometheus to scrape. It stays healthy for 75 seconds, then ramps
+into the incident over 30. Run too early and you get a correct but uninteresting
+answer — no errors, because there were none yet — so give it about two minutes.
+
+The healthy period is that long for a reason. The Prometheus templates sample at a 60
+second step, so a diagnosis needs at least one healthy sample a step before the
+incident, or it has nothing to compare the peak against and — correctly — declines to
+say latency rose. A real backend has hours of history; this is the least that still
+leaves a baseline.
 
 The automated version of the same check:
 
@@ -62,10 +69,17 @@ docker compose -f demo/docker-compose.yml down -v
 ```
 
 Those tests are skipped without `AUDITGLASS_LIVE=1`, so the ordinary suite still needs
-no backend. The assertion that matters there is not "findings were produced" — a run
-produces a report even when every query failed, by design — but that **no evidence gap
-names a query error**. A gap saying `parse error at line 1` is a broken template, and
-it is precisely what the offline tests cannot see.
+no backend. They wait on their own until the incident has developed on both backends
+— connection pool saturated in Prometheus, error lines present in Loki — and then run
+one diagnosis that every assertion shares.
+
+What they check is not "findings were produced" — a run produces a report even when
+every query failed, by design. They check that **no evidence gap names a query
+error** (a gap saying `parse error at line 1` is a broken template, precisely what the
+offline tests cannot see), that both backends returned records, and that the run
+reaches the same causal finding as the offline demo. No assertion is allowed to pass
+on an empty list: a redaction check over zero records proves nothing, so each one
+first asserts there is something to check.
 
 Note what the seeder does that this tool cannot: it writes, through
 `/loki/api/v1/push`. That path is deliberately absent from `policy.endpoints` in

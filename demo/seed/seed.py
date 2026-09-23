@@ -14,7 +14,16 @@ Prometheus images with their default configuration:
 
 The incident is the same one the offline demo uses: payments latency degrades, orders
 holds its connections open waiting on it, the pool saturates, and timeouts surface
-upstream. RAMP_SECONDS controls how long the healthy period lasts before it starts.
+upstream.
+
+Timing, all from the moment the seeder starts:
+
+* ``HEALTHY_SECONDS`` (default 75) of normal operation. This must be longer than one
+  query step — the Prometheus templates default to 60s — or a diagnosis run just
+  after the incident sees no healthy sample to compare against, and correctly
+  declines to say that latency rose. Real backends have hours of history; this is
+  the least history that still leaves the diagnosis a baseline.
+* ``RAMP_SECONDS`` (default 30) over which the incident develops to its peak.
 
 Everything here is invented. Addresses are RFC 5737 documentation ranges and domains
 are RFC 2606 reserved names.
@@ -32,6 +41,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOKI = os.environ.get("LOKI_URL", "http://loki:3100")
+HEALTHY = int(os.environ.get("HEALTHY_SECONDS", "75"))
 RAMP = int(os.environ.get("RAMP_SECONDS", "30"))
 METRICS_PORT = int(os.environ.get("METRICS_PORT", "8000"))
 
@@ -44,9 +54,9 @@ CLIENT_IPS = ["203.0.113.47", "203.0.113.19", "198.51.100.8", "192.0.2.144"]
 def phase() -> float:
     """0.0 while healthy, ramping to 1.0 as the incident develops."""
     elapsed = time.time() - START
-    if elapsed < RAMP:
+    if elapsed < HEALTHY:
         return 0.0
-    return min(1.0, (elapsed - RAMP) / RAMP)
+    return min(1.0, (elapsed - HEALTHY) / RAMP)
 
 
 def metric_values() -> dict[tuple[str, str], float]:
@@ -167,7 +177,7 @@ def push_logs() -> None:
 def main() -> None:
     wait_for_loki()
     threading.Thread(target=push_logs, daemon=True).start()
-    print(f"seeding; ramp={RAMP}s, metrics on :{METRICS_PORT}", flush=True)
+    print(f"seeding; healthy={HEALTHY}s ramp={RAMP}s, metrics on :{METRICS_PORT}", flush=True)
     ThreadingHTTPServer(("0.0.0.0", METRICS_PORT), Metrics).serve_forever()
 
 

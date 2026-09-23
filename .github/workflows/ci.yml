@@ -62,11 +62,18 @@ jobs:
 
       - name: Run the whole pipeline with networking removed
         # Backs the claim in README and docs/threat-model.md T4 that a local-only
-        # deployment makes no outbound request. `unshare -rn` gives the process a
+        # deployment makes no outbound request. `unshare -n` gives the process a
         # network namespace with nothing but loopback, so any attempt to reach the
         # network fails rather than silently succeeding.
+        #
+        # sudo, because Ubuntu 24.04 runners forbid unprivileged user namespaces
+        # (AppArmor's apparmor_restrict_unprivileged_userns), so the rootless
+        # `unshare -rn` form fails with "write failed /proc/self/uid_map". Paths are
+        # absolute because sudo does not carry the runner's PATH.
         run: |
-          unshare -rn -- python -c "
+          PY="$(command -v python)"
+          AG="$(command -v auditglass)"
+          sudo unshare -n -- "$PY" -c "
           import socket, sys
           # Prove the sandbox is real before trusting the result of the run.
           try:
@@ -75,8 +82,9 @@ jobs:
               pass
           else:
               sys.exit('network was reachable; this job would not prove anything')
+          print('sandbox confirmed: no route out')
           "
-          unshare -rn -- auditglass demo --output ./runs
+          sudo unshare -n -- "$AG" demo --output ./runs
           test -f ./runs/*/report.md
           test -f ./runs/*/manifest.json
           echo "completed with no outbound network"
@@ -102,8 +110,9 @@ jobs:
         # This is the job that makes the README's claim about the Loki and Prometheus
         # connectors true. Nothing else in this workflow can: every other test runs
         # against fixtures or a stub, so a template that generates LogQL a real Loki
-        # rejects would pass all of them. The test waits for the backends to hold
-        # data itself, so there is no blind sleep here.
+        # rejects would pass all of them. The test itself waits until the incident
+        # has developed on both backends (pool saturated, error lines present), so
+        # there is no blind sleep here.
         env:
           AUDITGLASS_LIVE: "1"
         run: pytest tests/integration -v

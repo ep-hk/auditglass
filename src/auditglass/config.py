@@ -37,6 +37,15 @@ class Base(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
+HttpMethod = Literal["GET", "POST"]
+
+
+def _default_methods() -> list[HttpMethod]:
+    # A named, annotated factory rather than a lambda: mypy 2 infers a lambda's
+    # return as list[str], which does not satisfy list[Literal[...]].
+    return ["GET"]
+
+
 class EndpointPolicy(Base):
     """One allowed destination. Anything not described here is denied."""
 
@@ -46,7 +55,7 @@ class EndpointPolicy(Base):
     host: str
     port: int | None = None
     paths: list[str] = Field(default_factory=list)
-    methods: list[Literal["GET", "POST"]] = Field(default_factory=lambda: ["GET"])
+    methods: list[HttpMethod] = Field(default_factory=_default_methods)
 
     @field_validator("paths")
     @classmethod

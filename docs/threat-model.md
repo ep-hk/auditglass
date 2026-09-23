@@ -505,7 +505,7 @@ environment, using the synthetic stack in `demo/`:
 | Reports are inert | `pytest tests/test_report_render.py` asserts that injected image syntax, HTML and escape sequences do not survive into the report |
 | Pseudonymisation preserves correlation | `pytest tests/test_redact.py` asserts identical inputs produce identical tokens within a run and different tokens across runs |
 | Redaction recall | `tests/corpus/pii_corpus.json` is the labelled corpus; `tests/test_redact.py` measures recall against it. Substitute your own corpus |
-| No data leaves in local mode | The CI job that runs the full pipeline in a container with no outbound network |
+| No data leaves in local mode | The `no-egress` CI job runs the full pipeline inside a network namespace that has only loopback, after first proving that the namespace cannot reach the internet |
 | The audit record is complete | Read `examples/run-sample/` — a full run directory is committed to the repository. No installation required |
 
 `examples/run-sample/` is the fastest way to evaluate whether the audit trail meets your

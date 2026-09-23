@@ -11,7 +11,6 @@ See ``docs/writing-a-connector.md``.
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlsplit
 
 from ..config import EndpointPolicy
 from ..errors import ProviderError
@@ -83,16 +82,3 @@ class HTTPBackedProvider:
     def parse(self, body: Any) -> list[dict[str, Any]]:  # pragma: no cover
         raise NotImplementedError
 
-
-def endpoint_from_url(name: str, backend: str, url: str, paths: list[str], methods: list[str]):
-    """Convenience for tests and for building an endpoint from a plain URL."""
-    parts = urlsplit(url)
-    return EndpointPolicy(
-        name=name,
-        backend=backend,
-        scheme=parts.scheme or "https",
-        host=parts.hostname or "",
-        port=parts.port,
-        paths=paths,
-        methods=methods,
-    )
